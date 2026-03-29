@@ -1,0 +1,34 @@
+{
+  "name": "prettier-plugin-pyramid-object-keys",
+  "version": "1.0.0",
+  "description": "Prettier plugin that arranges object keys, interface properties, and destructuring in pyramid order (shortest first, longest last)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "keywords": [
+    "prettier",
+    "prettier-plugin",
+    "object-keys",
+    "sort-keys",
+    "pyramid",
+    "typescript",
+    "interfaces"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "prettier": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "prettier": "^3.0.0",
+    "typescript": "^6.0.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "npm run build && node test/test.js && node test/integration.js",
+    "prepublishOnly": "npm run build"
+  }
+}

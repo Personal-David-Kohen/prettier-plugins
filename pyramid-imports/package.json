@@ -1,0 +1,32 @@
+{
+  "name": "prettier-plugin-pyramid-imports",
+  "version": "1.0.0",
+  "description": "Prettier plugin that arranges JS/TS imports in pyramid order (shortest first, longest last)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "keywords": [
+    "prettier",
+    "prettier-plugin",
+    "imports",
+    "sort-imports",
+    "pyramid"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "prettier": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "prettier": "^3.0.0",
+    "typescript": "^6.0.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "npm run build && node test/test.js && node test/integration.js",
+    "prepublishOnly": "npm run build"
+  }
+}
