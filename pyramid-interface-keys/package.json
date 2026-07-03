@@ -1,0 +1,31 @@
+{
+  "name": "prettier-plugin-pyramid-interface-keys",
+  "version": "1.0.0",
+  "description": "Prettier plugin that orders TypeScript interface members by line length",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "keywords": [
+    "prettier",
+    "prettier-plugin",
+    "typescript",
+    "interfaces",
+    "pyramid"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "prettier": ">=3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "prettier": "^3.0.0",
+    "typescript": "^6.0.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node test/test.js && node test/integration.js",
+    "prepublishOnly": "npm run build"
+  }
+}
