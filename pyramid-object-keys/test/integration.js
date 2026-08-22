@@ -27,6 +27,16 @@ async function main() {
 
   console.log("=== PRETTIER OUTPUT ===");
   console.log(result);
+  const secondPass = await prettier.format(result, {
+    parser: "typescript",
+    plugins: [plugin],
+    printWidth: 120,
+    semi: true,
+    singleQuote: false,
+  });
+  if (secondPass !== result) {
+    throw new Error("object-key formatting did not converge in one pass");
+  }
   console.log(
     "✓ Integration test passed — prettier ran with plugin successfully",
   );

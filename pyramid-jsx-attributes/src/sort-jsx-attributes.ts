@@ -5,6 +5,10 @@ interface Attribute {
   spread: boolean;
 }
 
+function normalizedLength(text: string): number {
+  return text.replace(/\s+/g, " ").trim().length;
+}
+
 function skipQuoted(source: string, start: number): number {
   const quote = source[start];
   let i = start + 1;
@@ -59,13 +63,17 @@ function sortedAttributes(attributes: Attribute[]): Attribute[] {
   const candidates = first.spread ? attributes.slice(1) : attributes;
   const singles = candidates
     .filter((attribute) => !attribute.spread && !attribute.multiline)
-    .sort((a, b) => a.text.length - b.text.length || a.order - b.order);
+    .sort(
+      (a, b) =>
+        normalizedLength(a.text) - normalizedLength(b.text) ||
+        a.order - b.order,
+    );
   const multiline = candidates
     .filter((attribute) => !attribute.spread && attribute.multiline)
     .sort(
       (a, b) =>
-        a.text.split("\n")[0].trim().length -
-          b.text.split("\n")[0].trim().length || a.order - b.order,
+        normalizedLength(a.text) - normalizedLength(b.text) ||
+        a.order - b.order,
     );
   const spreads = candidates.filter((attribute) => attribute.spread);
   return [...pinnedFirst, ...singles, ...multiline, ...spreads];

@@ -14,7 +14,7 @@ function wrapParser(parser: Parser): Parser {
     ...parser,
 
     preprocess(text: string, options: ParserOptions): string | Promise<string> {
-      const sorted = sortImports(text);
+      const sorted = sortImports(text, options.printWidth ?? 80);
 
       if (typeof parser.preprocess === "function") {
         return parser.preprocess(sorted, options);

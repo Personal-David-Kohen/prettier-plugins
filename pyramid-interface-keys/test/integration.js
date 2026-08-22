@@ -16,6 +16,13 @@ async function main() {
     result,
     `interface Props {\n  id: number;\n  name?: string;\n  longestProperty: string;\n}\n`,
   );
+  assert.equal(
+    await prettier.format(result, {
+      parser: "typescript",
+      plugins: [plugin],
+    }),
+    result,
+  );
   console.log("interface-key integration test passed");
 }
 

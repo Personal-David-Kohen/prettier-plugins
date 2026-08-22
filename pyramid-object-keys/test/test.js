@@ -89,15 +89,15 @@ test(
   a: false,
 };`,
   `const config = {
-  z: true,
-  a: false,
   api: {
-    timeout: 5000,
     endpoints: {
       a: "/a",
       veryLongEndpointName: "/x",
     },
+    timeout: 5000,
   },
+  z: true,
+  a: false,
 };`,
 );
 
@@ -197,11 +197,11 @@ test(
   A: 1,
 };`,
   `const obj = {
-  A: 1,
   ID: permit.id,
   COMPANION_PHONE: this.optionalField(
     this.validatePhoneNumber(phone) ? phone : ""
   ),
+  A: 1,
 };`,
 );
 
@@ -214,10 +214,10 @@ test(
   ID: 1,
 };`,
   `const obj = {
-  ID: 1,
   REMARKS: \`\${a}_\${
     b || "default"
   }_\${c}\`,
+  ID: 1,
 };`,
 );
 
@@ -231,11 +231,11 @@ test(
   id: 1,
 };`,
   `const obj = {
-  id: 1,
   confirmationNumber:
     parseInt(record.PERMIT_RED_ID) ||
     parseInt(record.CONFIRMATION_NUMBER) ||
     null,
+  id: 1,
 };`,
 );
 

@@ -10,20 +10,32 @@ const parsers: NullableParsers = {
   typescript: null,
 };
 
-function wrapParser(parser: Parser): Parser {
-  return {
+function wrapParser(parser: Parser, parserName: string): Parser {
+  let wrapped: Parser;
+  wrapped = {
     ...parser,
 
     preprocess(text: string, options: ParserOptions): string | Promise<string> {
-      const sorted = sortObjectKeys(text);
-
-      if (typeof parser.preprocess === "function") {
-        return parser.preprocess(sorted, options);
-      }
-
-      return sorted;
+      const plugins = (options.plugins ?? []) as Plugin[];
+      const ownIndex = plugins.findIndex(
+        (plugin) => plugin.parsers?.[parserName] === wrapped,
+      );
+      const previous = plugins
+        .slice(0, ownIndex < 0 ? 0 : ownIndex)
+        .reverse()
+        .map((plugin) => plugin.parsers?.[parserName])
+        .find((candidate) => typeof candidate?.preprocess === "function");
+      const prepared = previous?.preprocess
+        ? previous.preprocess(text, options)
+        : parser.preprocess
+          ? parser.preprocess(text, options)
+          : text;
+      return prepared instanceof Promise
+        ? prepared.then(sortObjectKeys)
+        : sortObjectKeys(prepared);
     },
   };
+  return wrapped;
 }
 
 /**
@@ -119,10 +131,13 @@ function buildParsers(): void {
   if (babelPlugin) {
     try {
       if (babelPlugin.parsers?.["babel"]) {
-        parsers["babel"] = wrapParser(babelPlugin.parsers["babel"]);
+        parsers["babel"] = wrapParser(babelPlugin.parsers["babel"], "babel");
       }
       if (babelPlugin.parsers?.["babel-ts"]) {
-        parsers["babel-ts"] = wrapParser(babelPlugin.parsers["babel-ts"]);
+        parsers["babel-ts"] = wrapParser(
+          babelPlugin.parsers["babel-ts"],
+          "babel-ts",
+        );
       }
     } catch (err) {
       console.warn("pyramid-object-keys: failed to wrap babel parsers:", err);
@@ -135,7 +150,10 @@ function buildParsers(): void {
   if (tsPlugin) {
     try {
       if (tsPlugin.parsers?.["typescript"]) {
-        parsers["typescript"] = wrapParser(tsPlugin.parsers["typescript"]);
+        parsers["typescript"] = wrapParser(
+          tsPlugin.parsers["typescript"],
+          "typescript",
+        );
       }
     } catch (err) {
       console.warn(

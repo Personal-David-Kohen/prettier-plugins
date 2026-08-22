@@ -10,6 +10,7 @@ interface ClassifiedSegment extends Segment {
   isSubObject: boolean;
   isSafe: boolean;
   isEmpty: boolean;
+  isFlat: boolean;
 }
 
 // --- String skipping utility ---
@@ -223,10 +224,21 @@ function classifySegment(segment: Segment): ClassifiedSegment {
       isSubObject: false,
       isSafe: false,
       isEmpty: true,
+      isFlat: true,
     };
   }
 
   const trimmed = line.trim();
+  const codeLines = segment.text
+    .split("\n")
+    .map((value) => value.trim())
+    .filter(
+      (value) =>
+        value &&
+        !value.startsWith("//") &&
+        !value.startsWith("/*") &&
+        value !== "*",
+    );
 
   // Check unsafe patterns
   let isSafe = true;
@@ -249,9 +261,13 @@ function classifySegment(segment: Segment): ClassifiedSegment {
 
   // Check for sub-object value
   let isSubObject = false;
+  let isFlat = codeLines.length <= 1;
   const colonIdx = findValueColon(trimmed);
   if (colonIdx !== -1) {
     const afterColon = trimmed.slice(colonIdx + 1).trim();
+    if (afterColon.startsWith("{") || afterColon.startsWith("[")) {
+      isFlat = false;
+    }
     if (afterColon.startsWith("{")) {
       // Verify it's actually a multi-line block
       const nonEmptyLines = segment.text
@@ -267,6 +283,7 @@ function classifySegment(segment: Segment): ClassifiedSegment {
     isSubObject,
     isSafe,
     isEmpty: false,
+    isFlat,
   };
 }
 
@@ -338,6 +355,10 @@ function processObjectBody(body: string): string {
   if (nonEmpty.length <= 1) return body;
 
   const classified = segments.map(classifySegment);
+  const hasNonFlatSegment = classified.some(
+    (segment) => !segment.isEmpty && !segment.isFlat,
+  );
+  if (hasNonFlatSegment) return body;
   const sorted = sortClassifiedSegments(classified);
 
   // Check if anything changed
@@ -467,50 +488,20 @@ function findAllObjectBodies(
   // Sort descending by start position
   finalResults.sort((a, b) => b.start - a.start);
 
-  // Remove ranges that are contained within others already in the list
-  const filtered: Array<{ start: number; end: number }> = [];
-  for (const r of finalResults) {
-    const isContained = filtered.some(
-      (f) => r.start > f.start && r.end < f.end,
-    );
-    if (!isContained) {
-      filtered.push(r);
-    }
-  }
-
-  return filtered;
+  return finalResults;
 }
 
 // --- Main entry point ---
 
 export function sortObjectKeys(source: string): string {
-  let result = source;
-  let maxIterations = 50;
-
-  while (maxIterations-- > 0) {
-    const bodies = findAllObjectBodies(result);
-    if (bodies.length === 0) break;
-
-    let changed = false;
-
-    // Process innermost first (smallest ranges)
-    const sorted = [...bodies].sort(
-      (a, b) => a.end - a.start - (b.end - b.start),
-    );
-
-    for (const { start, end } of sorted) {
-      const body = result.slice(start + 1, end);
-      const processed = processObjectBody(body);
-
-      if (processed !== body) {
-        result = result.slice(0, start + 1) + processed + result.slice(end);
-        changed = true;
-        break; // Restart since offsets changed
-      }
-    }
-
-    if (!changed) break;
-  }
-
-  return result;
+  const bodies = findAllObjectBodies(source).sort(
+    (a, b) => a.end - a.start - (b.end - b.start),
+  );
+  return bodies.reduce((result, { start, end }) => {
+    const body = result.slice(start + 1, end);
+    const processed = processObjectBody(body);
+    return processed === body
+      ? result
+      : result.slice(0, start + 1) + processed + result.slice(end);
+  }, source);
 }

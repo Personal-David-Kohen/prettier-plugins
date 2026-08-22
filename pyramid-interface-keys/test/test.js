@@ -21,6 +21,30 @@ const expected = `interface ICategorySelectionSectionProps {
 assert.equal(sortInterfaceKeys(input), expected);
 assert.equal(sortInterfaceKeys(expected), expected);
 assert.equal(
+  sortInterfaceKeys(
+    `interface Props extends Record<string, { value: string }> {
+  longestProperty: string;
+  id: number;
+}`,
+  ),
+  `interface Props extends Record<string, { value: string }> {
+  id: number;
+  longestProperty: string;
+}`,
+);
+assert.equal(
+  sortInterfaceKeys(
+    `interface Props extends Record<string, { value: string }> {
+  longestProperty: string;
+  id: number;
+}`,
+  ),
+  `interface Props extends Record<string, { value: string }> {
+  id: number;
+  longestProperty: string;
+}`,
+);
+assert.equal(
   sortInterfaceKeys("const value = { longest: 1, a: 2 };"),
   "const value = { longest: 1, a: 2 };",
 );

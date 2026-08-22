@@ -41,12 +41,16 @@ const sortMultiInternal = (entry: MultiSegment): MultiSegment => {
 
   const middle = lines
     .slice(1, lines.length - 1)
-    .sort((a, b) => a.length - b.length);
+    .sort(
+      (a, b) =>
+        a.replace(/\s+/g, " ").trim().length -
+        b.replace(/\s+/g, " ").trim().length,
+    );
 
   return { type: SegmentType.Multi, lines: [first, ...middle, last] };
 };
 
-function parseSegments(source: string): Segment[] {
+function parseSegments(source: string, printWidth: number): Segment[] {
   const lines = source.split("\n");
   const segments: Segment[] = [];
   let i = 0;
@@ -76,7 +80,12 @@ function parseSegments(source: string): Segment[] {
         i++;
       }
 
-      segments.push({ type: SegmentType.Multi, lines: collected });
+      const normalized = collected.join(" ").replace(/\s+/g, " ").trim();
+      if (normalized.length <= printWidth) {
+        segments.push({ type: SegmentType.Single, line: normalized });
+      } else {
+        segments.push({ type: SegmentType.Multi, lines: collected });
+      }
       continue;
     }
 
@@ -94,14 +103,14 @@ function parseSegments(source: string): Segment[] {
 
 const sortKey = (entry: SingleSegment | MultiSegment): number => {
   if (entry.type === SegmentType.Single) {
-    return entry.line.length;
+    return entry.line.replace(/\s+/g, " ").trim().length;
   }
 
-  return entry.lines[entry.lines.length - 1].length;
+  return entry.lines[entry.lines.length - 1].replace(/\s+/g, " ").trim().length;
 };
 
-export const sortImports = (source: string): string => {
-  const segments = parseSegments(source);
+export const sortImports = (source: string, printWidth = 80): string => {
+  const segments = parseSegments(source, printWidth);
 
   const importEntries = segments.filter(
     (s): s is SingleSegment | MultiSegment =>

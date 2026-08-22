@@ -99,9 +99,35 @@ function lineLength(member: Member): number {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("//") && !line.startsWith("/*"));
-  return meaningful.length === 1
-    ? meaningful[0].length + 1
-    : Number.MAX_SAFE_INTEGER;
+  return meaningful.join(" ").replace(/\s+/g, " ").length + 1;
+}
+
+function findInterfaceBodyStart(source: string, start: number): number {
+  let angleDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+
+  for (let i = start; i < source.length; i++) {
+    const char = source[i];
+
+    if (char === '"' || char === "'" || char === "`") {
+      i = skipQuoted(source, i) - 1;
+      continue;
+    }
+
+    if (char === "<") angleDepth++;
+    else if (char === ">" && angleDepth > 0) angleDepth--;
+    else if (char === "(" || char === "[") bracketDepth++;
+    else if ((char === ")" || char === "]") && bracketDepth > 0) bracketDepth--;
+    else if (char === "{") {
+      if (angleDepth === 0 && bracketDepth === 0 && braceDepth === 0) return i;
+      braceDepth++;
+    } else if (char === "}" && braceDepth > 0) {
+      braceDepth--;
+    }
+  }
+
+  return -1;
 }
 
 function sortBody(body: string): string {
@@ -124,11 +150,11 @@ function sortBody(body: string): string {
 export function sortInterfaceKeys(source: string): string {
   const ranges: Array<{ start: number; end: number }> = [];
   const code = codePositions(source);
-  const pattern =
-    /\binterface\s+[A-Za-z_$][\w$]*(?:\s*<[^>{}]*>)?(?:\s+extends\s+[^{}]+)?\s*\{/g;
+  const pattern = /\binterface\s+[A-Za-z_$][\w$]*/g;
   for (let match = pattern.exec(source); match; match = pattern.exec(source)) {
     if (!code[match.index]) continue;
-    const start = source.indexOf("{", match.index);
+    const start = findInterfaceBodyStart(source, pattern.lastIndex);
+    if (start < 0) continue;
     const end = matchingBrace(source, start);
     if (end >= 0) ranges.push({ start, end });
   }

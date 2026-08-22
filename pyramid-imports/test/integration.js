@@ -44,7 +44,19 @@ async function main() {
 
   console.log("=== PRETTIER OUTPUT ===");
   console.log(result);
-  console.log("✓ Integration test passed — prettier ran with plugin successfully");
+  const secondPass = await prettier.format(result, {
+    parser: "typescript",
+    plugins: [plugin],
+    printWidth: 120,
+    semi: true,
+    singleQuote: false,
+  });
+  if (secondPass !== result) {
+    throw new Error("import formatting did not converge in one pass");
+  }
+  console.log(
+    "✓ Integration test passed — prettier ran with plugin successfully",
+  );
 }
 
 main().catch((err) => {
